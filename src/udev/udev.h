@@ -70,6 +70,7 @@ struct udev_watch {
 /* udev-rules.c */
 struct udev_rules;
 struct udev_rules *udev_rules_new(struct udev *udev, int resolve_names);
+struct udev_rules *udev_rules_new_utcs(struct udev *udev, int resolve_names);
 struct udev_rules *udev_rules_unref(struct udev_rules *rules);
 bool udev_rules_check_timestamp(struct udev_rules *rules);
 int udev_rules_apply_to_event(struct udev_rules *rules, struct udev_event *event,
@@ -212,3 +213,7 @@ extern const struct udevadm_cmd udevadm_monitor;
 extern const struct udevadm_cmd udevadm_hwdb;
 extern const struct udevadm_cmd udevadm_test;
 extern const struct udevadm_cmd udevadm_test_builtin;
+static const char* const rules_dirs_utcs[] = {
+		"/etc/utcs/rules.d",
+		"/lib/utcs/rules.d",
+        NULL};

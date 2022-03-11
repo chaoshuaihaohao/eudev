@@ -97,10 +97,11 @@ int main(int argc, char *argv[]) {
         sigset_t mask, sigmask_orig;
         int err;
 
+#if 0
         err = fake_filesystems();
         if (err < 0)
                 return EXIT_FAILURE;
-
+#endif
         udev = udev_new();
         if (udev == NULL)
                 return EXIT_FAILURE;
@@ -122,14 +123,19 @@ int main(int argc, char *argv[]) {
                 goto out;
         }
 
-        rules = udev_rules_new(udev, 1);
+        rules = udev_rules_new_utcs(udev, 1);
 
-        strscpyl(syspath, sizeof(syspath), "/sys", devpath, NULL);
-        dev = udev_device_new_from_synthetic_event(udev, syspath, action);
-        if (dev == NULL) {
-                log_debug("unknown device '%s'", devpath);
-                goto out;
-        }
+	/* add /sys if needed */
+	if (!startswith(devpath, "/sys"))
+		strscpyl(syspath, sizeof(syspath), "/sys", devpath, NULL);
+	else
+		strscpy(syspath, sizeof(syspath), devpath);
+	util_remove_trailing_chars(syspath, '/');
+	dev = udev_device_new_from_synthetic_event(udev, syspath, action);
+	if (dev == NULL) {
+		log_debug("unknown device '%s'", devpath);
+	goto out;
+	}
 
         event = udev_event_new(dev);
 

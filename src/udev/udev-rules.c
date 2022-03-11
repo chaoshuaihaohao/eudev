@@ -1761,6 +1761,76 @@ struct udev_rules *udev_rules_new(struct udev *udev, int resolve_names) {
         return rules;
 }
 
+struct udev_rules *udev_rules_new_utcs(struct udev *udev, int resolve_names) {
+        struct udev_rules *rules;
+        struct udev_list file_list;
+        struct token end_token;
+        char **files, **f;
+        int r;
+
+        rules = new0(struct udev_rules, 1);
+        if (rules == NULL)
+                return NULL;
+        rules->udev = udev;
+        rules->resolve_names = resolve_names;
+        udev_list_init(udev, &file_list, true);
+
+        /* init token array and string buffer */
+        rules->tokens = malloc(PREALLOC_TOKEN * sizeof(struct token));
+        if (rules->tokens == NULL)
+                return udev_rules_unref(rules);
+        rules->token_max = PREALLOC_TOKEN;
+
+        rules->strbuf = strbuf_new();
+        if (!rules->strbuf)
+                return udev_rules_unref(rules);
+
+        udev_rules_check_timestamp(rules);
+
+        r = conf_files_list_strv(&files, ".rules", NULL, rules_dirs_utcs);
+        if (r < 0) {
+                log_error_errno(r, "failed to enumerate rules files: %m");
+                return udev_rules_unref(rules);
+        }
+
+        /*
+         * The offset value in the rules strct is limited; add all
+         * rules file names to the beginning of the string buffer.
+         */
+        STRV_FOREACH(f, files)
+                rules_add_string(rules, *f);
+
+        STRV_FOREACH(f, files)
+                parse_file(rules, *f);
+
+        strv_free(files);
+
+        memzero(&end_token, sizeof(struct token));
+        end_token.type = TK_END;
+        add_token(rules, &end_token);
+        log_debug("rules contain %zu bytes tokens (%u * %zu bytes), %zu bytes strings",
+                  rules->token_max * sizeof(struct token), rules->token_max, sizeof(struct token), rules->strbuf->len);
+
+        /* cleanup temporary strbuf data */
+        log_debug("%zu strings (%zu bytes), %zu de-duplicated (%zu bytes), %zu trie nodes used",
+                  rules->strbuf->in_count, rules->strbuf->in_len,
+                  rules->strbuf->dedup_count, rules->strbuf->dedup_len, rules->strbuf->nodes_count);
+        strbuf_complete(rules->strbuf);
+
+        /* cleanup uid/gid cache */
+        free(rules->uids);
+        rules->uids = NULL;
+        rules->uids_cur = 0;
+        rules->uids_max = 0;
+        free(rules->gids);
+        rules->gids = NULL;
+        rules->gids_cur = 0;
+        rules->gids_max = 0;
+
+        dump_rules(rules);
+        return rules;
+}
+
 struct udev_rules *udev_rules_unref(struct udev_rules *rules) {
         if (rules == NULL)
                 return NULL;
