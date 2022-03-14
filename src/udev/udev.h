@@ -206,6 +206,7 @@ struct udevadm_cmd {
         int debug;
 };
 extern const struct udevadm_cmd udevadm_info;
+extern const struct udevadm_cmd udevadm_utcs;
 extern const struct udevadm_cmd udevadm_trigger;
 extern const struct udevadm_cmd udevadm_settle;
 extern const struct udevadm_cmd udevadm_control;

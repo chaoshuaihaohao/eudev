@@ -28,6 +28,7 @@ udevd_LDADD = \
 udevadm_SOURCES = \
 	udevadm.c \
 	udevadm-info.c \
+	udevadm-utcs.c \
 	udevadm-control.c \
 	udevadm-monitor.c \
 	udevadm-hwdb.c \

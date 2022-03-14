@@ -45,6 +45,7 @@ static const struct udevadm_cmd udevadm_help = {
 
 static const struct udevadm_cmd *udevadm_cmds[] = {
         &udevadm_info,
+        &udevadm_utcs,
         &udevadm_trigger,
         &udevadm_settle,
         &udevadm_control,
